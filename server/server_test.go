@@ -218,7 +218,7 @@ func TestServeReturnsCorrectJson(t *testing.T) {
 	}
 }
 func TestHookFailsOnBadRegistry(t *testing.T) {
-	nsc := &RegistryAdmission{}
+	nsc := &RegistryAdmission{Registry: "docker-registry.tools.wmflabs.org"}
 	server := httptest.NewServer(GetAdmissionServerNoSSL(nsc, ":8080").Handler)
 	requestString := string(encodeRequest(&AdmissionRequestFail))
 	myr := strings.NewReader(requestString)
@@ -230,14 +230,14 @@ func TestHookFailsOnBadRegistry(t *testing.T) {
 	}
 }
 func TestHookPassesOnRightRegistry(t *testing.T) {
-	nsc := &RegistryAdmission{}
+	nsc := &RegistryAdmission{Registry: "docker-registry.tools.wmflabs.org"}
 	server := httptest.NewServer(GetAdmissionServerNoSSL(nsc, ":8080").Handler)
 	requestString := string(encodeRequest(&AdmissionRequestPass))
 	myr := strings.NewReader(requestString)
 	r, _ := http.Post(server.URL, "application/json", myr)
 	review := decodeResponse(r.Body)
 	t.Log(review.Response)
-	if review.Response.Allowed {
-		t.Error("Allowed pod that should not have been allowed!")
+	if !review.Response.Allowed {
+		t.Error("Failed to allow pod that should have been allowed!")
 	}
 }
