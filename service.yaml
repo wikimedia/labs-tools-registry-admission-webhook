@@ -43,8 +43,9 @@ spec:
     spec:
       containers:
         - name: webhook
-          image: registry-admission:latest
-          imagePullPolicy: Never
+          image: docker-registry.tools.wmflabs.org/registry-admission:latest
+          # The following is for testing only
+          # imagePullPolicy: Never
           resources:
             limits:
               memory: 50Mi
