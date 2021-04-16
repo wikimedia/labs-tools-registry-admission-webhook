@@ -26,7 +26,7 @@ spec:
   selector:
     name: registry-admission
 ---
-apiVersion: apps/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: registry-admission
@@ -35,9 +35,12 @@ metadata:
     name: registry-admission
 spec:
   replicas: 2
+  selector:
+    matchLabels:
+      name: registry-admission
   template:
     metadata:
-      name: registry-admission 
+      name: registry-admission
       labels:
         name: registry-admission
     spec:
