@@ -1,0 +1,7 @@
+commonLabels:
+  name: registry-admission
+resources:
+- namespace.yaml
+- service.yaml
+- rbac.yaml
+- deployment.yaml

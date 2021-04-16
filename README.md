@@ -50,14 +50,12 @@ Since this was designed for use in [Toolforge](https://wikitech.wikimedia.org/wi
 The version of docker on the builder host is very old, so the builder/scratch pattern in
 the Dockerfile won't work.
 
-* Build the container image locally and copy it to the docker-builder host (currently tools-docker-builder-06.tools.eqiad.wmflabs). `$ docker build . -t docker-registry.tools.wmflabs.org/registry-admission:latest`
-* Then copy it over by saving it and using scp to get it on the docker-builder host `$ docker save -o saved_image.tar docker-registry.tools.wmflabs.org/ingress-admission:latest`
-* Use scp or similar to transfer saved_image.tar from your local host to the docker builder.
-* Load it into docker after copying the tar file to the builder host: `root@tools-docker-builder-06:~# docker load -i /home/bstorm/saved_image.tar`
-* Push the image to the internal repo: `root@tools-docker-builder-06:~# docker push docker-registry.tools.wmflabs.org/registry-admission:latest`
+* Build the container image on the docker-builder host (currently tools-docker-imagebuilder-01.tools.eqiad1.wikimedia.cloud). `$ docker build . -t docker-registry.tools.wmflabs.org/registry-admission:latest`
+* Push the image to the internal repo: `root@tools-docker-imagebuilder-01:~# docker push docker-registry.tools.wmflabs.org/registry-admission:latest`
 * On a control plane node as root (or as a cluster-admin user), with a checkout of the repo there somewhere (in a home directory is probably great), as root or admin user on Kubernetes, run `root@tools-k8s-control-1:# ./get-cert.sh`
-* Then run `root@tools-k8s-control-1:# ./ca-bundle.sh`, which will insert the right ca-bundle in the service.yaml manifest.
-* Now run `root@tools-k8s-control-1:# kubectl apply -f service.yaml` to launch it in the cluster.
+* If you are testing this locally, run `root@tools-k8s-control-1:# ./ca-bundle.sh`, which will insert the right ca-bundle in the service.yaml manifest and deploy by running `root@tools-k8s-control-1:# kubectl apply -f service.yaml` to launch it in the cluster.
+* If you are deploying this to Toolforge or Toolsbeta, the caBundle should be set correctly in a [kustomize](https://kustomize.io/) folder. You should now just be able to run `root@tools-k8s-control-1:# kubectl -k deploys/toolforge` to deploy to tools and `root@toolsbeta-test-k8s-control-1:# kubectl -k deploys/toolsbeta` to make the deployment work.
+
 
 ## Updating the certs
 
