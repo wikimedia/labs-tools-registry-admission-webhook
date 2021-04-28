@@ -16,3 +16,8 @@ webhooks:
         apiVersions: ["v1"]
         resources: ["pods"]
     failurePolicy: Ignore
+    namespaceSelector:
+      matchExpressions:
+        - key: name
+          operator: NotIn
+          values: ["tekton-pipelines"]
