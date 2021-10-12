@@ -20,4 +20,13 @@ webhooks:
       matchExpressions:
         - key: name
           operator: NotIn
-          values: ["tekton-pipelines"]
+          values:
+            # don't cause issues with kubernetes internals
+            - "kube-system"
+            # for testing
+            - "tekton-pipelines"
+            # so that the controller itself can start
+            - "registry-admission"
+            # future volume admission controller dependencies - see T292238
+            - "cert-manager"
+            - "wave"
