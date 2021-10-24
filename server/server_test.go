@@ -16,7 +16,7 @@ import (
 )
 
 var (
-	AdmissionRequestFail = admissionv1.AdmissionReview{
+	AdmissionRequestFailPod = admissionv1.AdmissionReview{
 		TypeMeta: v1.TypeMeta{
 			Kind: "AdmissionReview",
 		},
@@ -102,7 +102,7 @@ var (
 			},
 		},
 	}
-	AdmissionRequestPass = admissionv1.AdmissionReview{
+	AdmissionRequestPassPod = admissionv1.AdmissionReview{
 		TypeMeta: v1.TypeMeta{
 			Kind: "AdmissionReview",
 		},
@@ -188,6 +188,206 @@ var (
 			},
 		},
 	}
+	AdmissionRequestFailDeployment = admissionv1.AdmissionReview{
+		TypeMeta: v1.TypeMeta{
+			Kind: "AdmissionReview",
+		},
+		Request: &admissionv1.AdmissionRequest{
+			UID: "e911857d-c318-11e8-bbad-025000000001",
+			Kind: v1.GroupVersionKind{
+				Group: "core",
+				Version: "v1",
+				Kind: "Deployment",
+			},
+			Operation: "CREATE",
+			Object: runtime.RawExtension{
+				Raw: []byte(`{
+					"apiVersion": "apps/v1",
+					"kind": "Deployment",
+					"metadata": {
+						"annotations": {
+							"deployment.kubernetes.io/revision": "1"
+						},
+						"creationTimestamp": "2021-10-21T15:56:13Z",
+						"generation": 1,
+						"labels": {
+							"app.kubernetes.io/component": "web",
+							"app.kubernetes.io/managed-by": "webservice",
+							"name": "openstack-browser",
+							"toolforge": "tool"
+						},
+						"name": "openstack-browser",
+						"namespace": "tool-openstack-browser",
+						"resourceVersion": "509633552",
+						"uid": "50e8a190-f762-40f7-bef9-e3ec3384e3b2"
+					},
+					"spec": {
+						"progressDeadlineSeconds": 600,
+						"replicas": 1,
+						"revisionHistoryLimit": 10,
+						"selector": {
+							"matchLabels": {
+								"app.kubernetes.io/component": "web",
+								"app.kubernetes.io/managed-by": "webservice",
+								"name": "openstack-browser",
+								"toolforge": "tool"
+							}
+						},
+						"strategy": {
+							"rollingUpdate": {
+								"maxSurge": "25%",
+								"maxUnavailable": "25%"
+							},
+							"type": "RollingUpdate"
+						},
+						"template": {
+							"metadata": {
+								"creationTimestamp": null,
+								"labels": {
+									"app.kubernetes.io/component": "web",
+									"app.kubernetes.io/managed-by": "webservice",
+									"name": "openstack-browser",
+									"toolforge": "tool"
+								}
+							},
+							"spec": {
+								"containers": [
+									{
+										"command": [
+											"/usr/bin/webservice-runner",
+											"--type",
+											"uwsgi-python",
+											"--port",
+											"8000"
+										],
+										"image": "hub.docker.io/example:foobar",
+										"imagePullPolicy": "Always",
+										"name": "webservice",
+										"ports": [
+											{
+												"containerPort": 8000,
+												"name": "http",
+												"protocol": "TCP"
+											}
+										],
+										"resources": {},
+										"terminationMessagePath": "/dev/termination-log",
+										"terminationMessagePolicy": "File",
+										"workingDir": "/data/project/openstack-browser/"
+									}
+								],
+								"dnsPolicy": "ClusterFirst",
+								"restartPolicy": "Always",
+								"schedulerName": "default-scheduler",
+								"securityContext": {},
+								"terminationGracePeriodSeconds": 30
+							}
+						}
+					}
+				}`),
+			},
+		},
+	}
+	AdmissionRequestPassDeployment = admissionv1.AdmissionReview{
+		TypeMeta: v1.TypeMeta{
+			Kind: "AdmissionReview",
+		},
+		Request: &admissionv1.AdmissionRequest{
+			UID: "e911857d-c318-11e8-bbad-025000000001",
+			Kind: v1.GroupVersionKind{
+				Group: "core",
+				Version: "v1",
+				Kind: "Deployment",
+			},
+			Operation: "CREATE",
+			Object: runtime.RawExtension{
+				Raw: []byte(`{
+					"apiVersion": "apps/v1",
+					"kind": "Deployment",
+					"metadata": {
+						"annotations": {
+							"deployment.kubernetes.io/revision": "1"
+						},
+						"creationTimestamp": "2021-10-21T15:56:13Z",
+						"generation": 1,
+						"labels": {
+							"app.kubernetes.io/component": "web",
+							"app.kubernetes.io/managed-by": "webservice",
+							"name": "openstack-browser",
+							"toolforge": "tool"
+						},
+						"name": "openstack-browser",
+						"namespace": "tool-openstack-browser",
+						"resourceVersion": "509633552",
+						"uid": "50e8a190-f762-40f7-bef9-e3ec3384e3b2"
+					},
+					"spec": {
+						"progressDeadlineSeconds": 600,
+						"replicas": 1,
+						"revisionHistoryLimit": 10,
+						"selector": {
+							"matchLabels": {
+								"app.kubernetes.io/component": "web",
+								"app.kubernetes.io/managed-by": "webservice",
+								"name": "openstack-browser",
+								"toolforge": "tool"
+							}
+						},
+						"strategy": {
+							"rollingUpdate": {
+								"maxSurge": "25%",
+								"maxUnavailable": "25%"
+							},
+							"type": "RollingUpdate"
+						},
+						"template": {
+							"metadata": {
+								"creationTimestamp": null,
+								"labels": {
+									"app.kubernetes.io/component": "web",
+									"app.kubernetes.io/managed-by": "webservice",
+									"name": "openstack-browser",
+									"toolforge": "tool"
+								}
+							},
+							"spec": {
+								"containers": [
+									{
+										"command": [
+											"/usr/bin/webservice-runner",
+											"--type",
+											"uwsgi-python",
+											"--port",
+											"8000"
+										],
+										"image": "docker-registry.tools.wmflabs.org/toolforge-python39-sssd-web:latest",
+										"imagePullPolicy": "Always",
+										"name": "webservice",
+										"ports": [
+											{
+												"containerPort": 8000,
+												"name": "http",
+												"protocol": "TCP"
+											}
+										],
+										"resources": {},
+										"terminationMessagePath": "/dev/termination-log",
+										"terminationMessagePolicy": "File",
+										"workingDir": "/data/project/openstack-browser/"
+									}
+								],
+								"dnsPolicy": "ClusterFirst",
+								"restartPolicy": "Always",
+								"schedulerName": "default-scheduler",
+								"securityContext": {},
+								"terminationGracePeriodSeconds": 30
+							}
+						}
+					}
+				}`),
+			},
+		},
+	}
 )
 
 func decodeResponse(body io.ReadCloser) *admissionv1.AdmissionReview {
@@ -208,19 +408,19 @@ func encodeRequest(review *admissionv1.AdmissionReview) []byte {
 func TestServeReturnsCorrectJson(t *testing.T) {
 	nsc := &RegistryAdmission{}
 	server := httptest.NewServer(GetAdmissionServerNoSSL(nsc, ":8080").Handler)
-	requestString := string(encodeRequest(&AdmissionRequestPass))
+	requestString := string(encodeRequest(&AdmissionRequestPassPod))
 	myr := strings.NewReader(requestString)
 	r, _ := http.Post(server.URL, "application/json", myr)
 	review := decodeResponse(r.Body)
 	t.Log(review.Response)
-	if review.Request.UID != AdmissionRequestPass.Request.UID {
+	if review.Request.UID != AdmissionRequestPassPod.Request.UID {
 		t.Error("Request and response UID don't match")
 	}
 }
-func TestHookFailsOnBadRegistry(t *testing.T) {
+func TestHookFailsOnBadRegistryPod(t *testing.T) {
 	nsc := &RegistryAdmission{Registry: "docker-registry.tools.wmflabs.org"}
 	server := httptest.NewServer(GetAdmissionServerNoSSL(nsc, ":8080").Handler)
-	requestString := string(encodeRequest(&AdmissionRequestFail))
+	requestString := string(encodeRequest(&AdmissionRequestFailPod))
 	myr := strings.NewReader(requestString)
 	r, _ := http.Post(server.URL, "application/json", myr)
 	review := decodeResponse(r.Body)
@@ -229,15 +429,39 @@ func TestHookFailsOnBadRegistry(t *testing.T) {
 		t.Error("Allowed pod that should not have been allowed!")
 	}
 }
-func TestHookPassesOnRightRegistry(t *testing.T) {
+func TestHookPassesOnRightRegistryPod(t *testing.T) {
 	nsc := &RegistryAdmission{Registry: "docker-registry.tools.wmflabs.org"}
 	server := httptest.NewServer(GetAdmissionServerNoSSL(nsc, ":8080").Handler)
-	requestString := string(encodeRequest(&AdmissionRequestPass))
+	requestString := string(encodeRequest(&AdmissionRequestPassPod))
 	myr := strings.NewReader(requestString)
 	r, _ := http.Post(server.URL, "application/json", myr)
 	review := decodeResponse(r.Body)
 	t.Log(review.Response)
 	if !review.Response.Allowed {
 		t.Error("Failed to allow pod that should have been allowed!")
+	}
+}
+func TestHookFailsOnBadRegistryDeployment(t *testing.T) {
+	nsc := &RegistryAdmission{Registry: "docker-registry.tools.wmflabs.org"}
+	server := httptest.NewServer(GetAdmissionServerNoSSL(nsc, ":8080").Handler)
+	requestString := string(encodeRequest(&AdmissionRequestFailDeployment))
+	myr := strings.NewReader(requestString)
+	r, _ := http.Post(server.URL, "application/json", myr)
+	review := decodeResponse(r.Body)
+	t.Log(review.Response)
+	if review.Response.Allowed {
+		t.Error("Allowed deployment that should not have been allowed!")
+	}
+}
+func TestHookPassesOnRightRegistryDeployment(t *testing.T) {
+	nsc := &RegistryAdmission{Registry: "docker-registry.tools.wmflabs.org"}
+	server := httptest.NewServer(GetAdmissionServerNoSSL(nsc, ":8080").Handler)
+	requestString := string(encodeRequest(&AdmissionRequestPassDeployment))
+	myr := strings.NewReader(requestString)
+	r, _ := http.Post(server.URL, "application/json", myr)
+	review := decodeResponse(r.Body)
+	t.Log(review.Response)
+	if !review.Response.Allowed {
+		t.Error("Failed to allow deployment that should have been allowed!")
 	}
 }

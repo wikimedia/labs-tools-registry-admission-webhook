@@ -15,6 +15,10 @@ webhooks:
         apiGroups: [""]
         apiVersions: ["v1"]
         resources: ["pods"]
+      - operations: ["CREATE", "UPDATE"]
+        apiGroups: ["apps"]
+        apiVersions: ["v1"]
+        resources: ["deployments"]
     failurePolicy: Ignore
     admissionReviewVersions: ["v1"]
     sideEffects: None
