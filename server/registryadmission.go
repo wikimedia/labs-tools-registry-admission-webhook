@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	"github.com/sirupsen/logrus"
-	"k8s.io/api/admission/v1beta1"
+	admissionv1 "k8s.io/api/admission/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -17,13 +17,14 @@ type RegistryAdmission struct {
 
 // HandleAdmission is the logic of the whole webhook, really.  This is where
 // the decision to allow a Kubernetes pod update or create or not takes place.
-func (r *RegistryAdmission) HandleAdmission(review *v1beta1.AdmissionReview) error {
+func (r *RegistryAdmission) HandleAdmission(review *admissionv1.AdmissionReview) error {
 	// logrus.Debugln(review.Request)
 	req := review.Request
 	var pod corev1.Pod
 	if err := json.Unmarshal(req.Object.Raw, &pod); err != nil {
 		logrus.Errorf("Could not unmarshal raw object: %v", err)
-		review.Response = &v1beta1.AdmissionResponse{
+		review.Response = &admissionv1.AdmissionResponse{
+			UID: req.UID,
 			Result: &v1.Status{
 				Message: err.Error(),
 			},
@@ -41,7 +42,8 @@ func (r *RegistryAdmission) HandleAdmission(review *v1beta1.AdmissionReview) err
 				container.Image,
 				req.Namespace,
 			)
-			review.Response = &v1beta1.AdmissionResponse{
+			review.Response = &admissionv1.AdmissionResponse{
+				UID: req.UID,
 				Allowed: false,
 				Result: &v1.Status{
 					Message: "Only WMCS-approved docker registry allowed",
@@ -52,7 +54,8 @@ func (r *RegistryAdmission) HandleAdmission(review *v1beta1.AdmissionReview) err
 		logrus.Debugf("Found registry image: %v", container.Image)
 	}
 
-	review.Response = &v1beta1.AdmissionResponse{
+	review.Response = &admissionv1.AdmissionResponse{
+		UID: req.UID,
 		Allowed: true,
 		Result: &v1.Status{
 			Message: "Welcome to the fantasy zone!",

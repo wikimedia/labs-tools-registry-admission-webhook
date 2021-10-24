@@ -3,8 +3,7 @@
 This is a simple [Kubernetes Admission Validation Webhook](https://kubernetes.io/docs/reference/access-authn-authz/extensible-admission-controllers/#what-are-admission-webhooks) that is intended to replace
 a custom validating admission controller previously compiled into older versions of
 Kubernetes.  Since the webhook will compile with the versions it uses, it will work
-as long as the admission v1beta1 API is valid. When that changes, this webhook should
-begin to consume the new admission/v1 API whenever it happens.
+as long as the admission v1 API is valid.
 
 ## Use and development
 
