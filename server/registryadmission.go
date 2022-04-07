@@ -9,12 +9,12 @@ import (
 	admissionv1 "k8s.io/api/admission/v1"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/apis/meta/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // RegistryAdmission type is where the registry is defined and the handler method is linked
 type RegistryAdmission struct {
-	Registry string
+	Registries []string
 }
 
 // HandleAdmission is the logic of the whole webhook, really.  This is where
@@ -30,9 +30,9 @@ func (r *RegistryAdmission) HandleAdmission(review *admissionv1.AdmissionReview)
 		if err := json.Unmarshal(req.Object.Raw, &pod); err != nil {
 			logrus.Errorf("Could not unmarshal raw object: %v", err)
 			review.Response = &admissionv1.AdmissionResponse{
-				UID: req.UID,
+				UID:     req.UID,
 				Allowed: false,
-				Result: &v1.Status{
+				Result: &metav1.Status{
 					Message: err.Error(),
 				},
 			}
@@ -45,9 +45,9 @@ func (r *RegistryAdmission) HandleAdmission(review *admissionv1.AdmissionReview)
 		if err := json.Unmarshal(req.Object.Raw, &deployment); err != nil {
 			logrus.Errorf("Could not unmarshal raw object: %v", err)
 			review.Response = &admissionv1.AdmissionResponse{
-				UID: req.UID,
+				UID:     req.UID,
 				Allowed: false,
-				Result: &v1.Status{
+				Result: &metav1.Status{
 					Message: err.Error(),
 				},
 			}
@@ -59,9 +59,9 @@ func (r *RegistryAdmission) HandleAdmission(review *admissionv1.AdmissionReview)
 
 	logrus.Warningf("Encountered unsupported Kind=%v", req.Kind)
 	review.Response = &admissionv1.AdmissionResponse{
-		UID: req.UID,
+		UID:     req.UID,
 		Allowed: false,
-		Result: &v1.Status{
+		Result: &metav1.Status{
 			Message: fmt.Sprintf("Unsupported Kind=%v", req.Kind),
 		},
 	}
@@ -70,33 +70,56 @@ func (r *RegistryAdmission) HandleAdmission(review *admissionv1.AdmissionReview)
 }
 
 func (r *RegistryAdmission) handleForPodSpec(podSpec corev1.PodSpec, review *admissionv1.AdmissionReview) error {
+	allPassed := true
+	var nonCompliantImages []string
 	for i := 0; i < len(podSpec.Containers); i++ {
 		container := &podSpec.Containers[i]
-		if !strings.HasPrefix(container.Image, r.Registry+"/") && review.Request.Namespace != "kube-system" {
-			logrus.Errorf(
-				"Attempt to use docker image not in approved registry: %v, namespace: %v, object: %v/%v",
-				container.Image,
-				review.Request.Namespace,
-				review.Request.Kind.Kind,
-				review.Request.Name,
-			)
-			review.Response = &admissionv1.AdmissionResponse{
-				UID: review.Request.UID,
-				Allowed: false,
-				Result: &v1.Status{
-					Message: "Only WMCS-approved docker registry allowed",
-				},
+		matchesAnyRegistry := false
+		logrus.Debugf("Checking container image: %v", container.Image)
+		for _, registry := range r.Registries {
+			logrus.Debugf("Checking container image %v against registry %v", container.Image, registry)
+			if strings.HasPrefix(container.Image, registry+"/") || review.Request.Namespace == "kube-system" {
+				logrus.Debugf("Image %v matches registry %v", container.Image, registry)
+				matchesAnyRegistry = true
 			}
-			return nil
 		}
-		logrus.Debugf("Found registry image: %v", container.Image)
+		if !matchesAnyRegistry {
+			logrus.Debugf("Image %v not in one of the known registries %v", container.Image, r.Registries)
+			nonCompliantImages = append(
+				nonCompliantImages,
+				fmt.Sprintf(
+					"Kind=%v, Namespace=%v Name=%v Image=%v",
+					review.Request.Kind,
+					review.Request.Namespace,
+					review.Request.Name,
+					container.Image,
+				),
+			)
+			allPassed = false
+		}
 	}
 
+	if allPassed {
+		review.Response = &admissionv1.AdmissionResponse{
+			UID:     review.Request.UID,
+			Allowed: true,
+			Result: &metav1.Status{
+				Message: "Welcome to the fantasy zone!",
+			},
+		}
+		return nil
+	}
+
+	errorMessage := fmt.Sprintf("The following container images did not match any of the allowed registries (%v): %v",
+		r.Registries,
+		nonCompliantImages,
+	)
+	logrus.Errorf(errorMessage)
 	review.Response = &admissionv1.AdmissionResponse{
-		UID: review.Request.UID,
-		Allowed: true,
-		Result: &v1.Status{
-			Message: "Welcome to the fantasy zone!",
+		UID:     review.Request.UID,
+		Allowed: false,
+		Result: &metav1.Status{
+			Message: errorMessage,
 		},
 	}
 	return nil

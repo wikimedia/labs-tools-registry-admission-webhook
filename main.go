@@ -8,11 +8,11 @@ import (
 
 // Config is the general configuration of the webhook via env variables
 type Config struct {
-	ListenOn string `default:"0.0.0.0:8080"`
-	TLSCert  string `default:"/etc/webhook/certs/cert.pem"`
-	TLSKey   string `default:"/etc/webhook/certs/key.pem"`
-	Registry string `default:"docker-registry.tools.wmflabs.org"`
-	Debug    bool   `default:"true"`
+	ListenOn   string   `default:"0.0.0.0:8080"`
+	TLSCert    string   `default:"/etc/webhook/certs/cert.pem"`
+	TLSKey     string   `default:"/etc/webhook/certs/key.pem"`
+	Registries []string `default:"['docker-registry.tools.wmflabs.org']"`
+	Debug      bool     `default:"true"`
 }
 
 func main() {
@@ -24,7 +24,7 @@ func main() {
 	}
 
 	logrus.Infoln(config)
-	nsac := server.RegistryAdmission{Registry: config.Registry}
+	nsac := server.RegistryAdmission{Registries: config.Registries}
 	s := server.GetAdmissionValidationServer(&nsac, config.TLSCert, config.TLSKey, config.ListenOn)
 	s.ListenAndServeTLS("", "")
 }

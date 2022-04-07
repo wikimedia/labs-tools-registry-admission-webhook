@@ -13,9 +13,8 @@ import (
 )
 
 var (
-	scheme          = runtime.NewScheme()
-	codecs          = serializer.NewCodecFactory(scheme)
-	tlscert, tlskey string
+	scheme = runtime.NewScheme()
+	codecs = serializer.NewCodecFactory(scheme)
 )
 
 // AdmissionController is an abstraction to work with the admission handler
@@ -42,6 +41,9 @@ func (acs *AdmissionControllerServer) ServeHTTP(w http.ResponseWriter, r *http.R
 	}
 	acs.AdmissionController.HandleAdmission(review)
 	responseInBytes, err := json.Marshal(review)
+	if err != nil {
+		logrus.Errorln("Can't encode request", err)
+	}
 
 	if _, err := w.Write(responseInBytes); err != nil {
 		logrus.Errorln(err)
