@@ -10,17 +10,11 @@ help() {
 
     Options:
       -h        Show this help.
-      -c        Refresh also the certificates (only for new installations or if they are expired).
+      -c        Force refresh the certificates (only for new installations or if they are expired).
       -b        Also build the container (locally only).
       -v        Show verbose output.
 
 EOH
-}
-
-
-deploy_generic() {
-    local environment="${1?No environment passed}"
-    kubectl apply -k "deploys/$environment"
 }
 
 
@@ -47,9 +41,12 @@ main () {
     shift $((OPTIND-1))
 
     local environment="${1?No environment passed}"
-    if [[ ! -d "deploys/$environment"  ]]; then
+    if [[ ! -f "deploy/values-$environment.yaml.gotmpl"  ]]; then
         echo "Unknown environment $environment, use one of:"
-        ls deploys/
+        find deploy \
+            -iname 'values-*yaml.gotmpl' \
+            | grep -v 'common' \
+            | sed -e 's|deploy/values-\(.*\).yaml.gotmpl|\1|'
         exit 1
     fi
 
@@ -60,16 +57,19 @@ main () {
         fi
         # shellcheck disable=SC2046
         eval $(minikube docker-env)
-        docker build . -t registry-admission:latest
-    fi
-    if [[ "$environment" == "dev" ]]; then
-        ./ca-bundle.sh
-    fi
-    if [[ "$refresh_certs" == "yes" ]]; then
-        ./get-cert.sh
+        docker build . -t docker-registry.tools.wmflabs.org/registry-admission:latest
     fi
 
-    deploy_generic "$environment"
+    if ! kubectl --namespace registry-admission get secret registry-admission-certs > /dev/null 2>&1; then
+        refresh_certs="yes"
+    fi
+    if [[ "$refresh_certs" == "yes" ]]; then
+        ./deploy/utils/get-cert.sh
+    fi
+
+    helmfile \
+        --environment "$environment" \
+        apply
 }
 
 

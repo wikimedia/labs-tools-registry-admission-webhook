@@ -20,22 +20,8 @@ these external go libraries:
 	* k8s.io/api
 	* k8s.io/apimachinery
 
-To build on minikube and launch, follow these steps:
-
-* `eval $(minikube docker-env)`
-* `docker build -t registry-admission:latest .`
-
-That creates the image on minikube's docker daemon.  Then to launch the service:
-
-NOTE: Before you run ca-bundle.sh on MacOS, read the comments in that file and adjust accordingly
-
-* `./get-cert.sh`  <-- creates a CSR and a secret with the TLS cert and key
-* `./ca-bundle.sh` <-- places the correct ca-bundle in the service.yaml file
-* `kubectl apply -f service.yaml`
-
-As long as a suitable image can be placed where needed on toolforge, which can be done locally if
-node affinity is used or some similar mechanism to prevent it being needed on every
-spun-up node, the last three steps are likely all that is needed to bootstrap.
+To build on minikube (current supported k8s version is 1.21) and launch, just run:
+* `deploy.sh -b dev`
 
 ## Testing
 
@@ -44,6 +30,13 @@ or want to examine things more, use `go test -test.v ./...`
 
 ## Deploying
 
+You can deploy it using the `deploy.sh` script.
+For the dev environment rebuilding the container (minikube running locally):
+* `deploy.sh -b dev`
+
+If you don't want to rebuild the image, skip the flag:
+* `deploy.sh dev`
+
 Since this was designed for use in [Toolforge](https://wikitech.wikimedia.org/wiki/Portal:Toolforge "Toolforge Portal"), so the instructions here focus on that.
 
 The version of docker on the builder host is very old, so the builder/scratch pattern in
@@ -51,13 +44,15 @@ the Dockerfile won't work.
 
 * Build the container image on the docker-builder host (currently tools-docker-imagebuilder-01.tools.eqiad1.wikimedia.cloud). `$ docker build . -t docker-registry.tools.wmflabs.org/registry-admission:latest`
 * Push the image to the internal repo: `root@tools-docker-imagebuilder-01:~# docker push docker-registry.tools.wmflabs.org/registry-admission:latest`
-* On a control plane node as root (or as a cluster-admin user), with a checkout of the repo there somewhere (in a home directory is probably great), as root or admin user on Kubernetes, run `root@tools-k8s-control-1:# ./get-cert.sh`
-* If you are testing this locally, run `root@tools-k8s-control-1:# ./ca-bundle.sh`, which will insert the right ca-bundle in the service.yaml manifest and deploy by running `root@tools-k8s-control-1:# kubectl apply -f service.yaml` to launch it in the cluster.
-* If you are deploying this to Toolforge or Toolsbeta, the caBundle should be set correctly in a [kustomize](https://kustomize.io/) folder. You should now just be able to run `root@tools-k8s-control-1:# kubectl -k deploys/toolforge` to deploy to tools and `root@toolsbeta-test-k8s-control-1:# kubectl -k deploys/toolsbeta` to make the deployment work.
+* On a control plane node as root (or as a cluster-admin user), with a checkout of the repo there somewhere (in a home directory is probably great), as root or admin user on Kubernetes, run `root@tools-k8s-control-1:# ./deploy.sh toolsbeta`
 
 
 ## Updating the certs
 
 Certificates created with the Kubernetes API are valid for one year. When upgrading Kubernetes (or whenever necessary)
-it is wise to rotate the certs for this service. To do so simply run (as cluster admin or root@control host) `root@tools-k8s-control-1:# ./get-cert.sh`. That will recreate the cert secret. Then delete the existing pods to ensure
+it is wise to rotate the certs for this service. To do so, you can do it at deploy time with (change `tools` with the env you are refreshing the certs for):
+
+* `./deploy.sh -c tools`
+
+Or any time by simply running (as cluster admin or root@control host) `root@tools-k8s-control-1:# ./deploy/utils/get-cert.sh`. That will recreate the cert secret. Then delete the existing pods to ensure
 that the golang web services are serving the new cert.

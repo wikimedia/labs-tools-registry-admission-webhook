@@ -1,0 +1,37 @@
+# Default values for registry-admission-webhook.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+replicaCount: 2
+
+image:
+  repository: docker-registry.tools.wmflabs.org/registry-admission
+  # The following is for testing only
+  # pullPolicy: Never
+  pullPolicy: IfNotPresent
+  # Overrides the image tag whose default is the chart appVersion.
+  tag: "latest"
+
+securityContext:
+  readOnlyRootFilesystem: true
+
+service:
+  type: ClusterIP
+  port: 443
+
+resources:
+  limits:
+    memory: 50Mi
+    cpu: 300m
+  requests:
+    memory: 50Mi
+    cpu: 300m
+
+
+webhookName: {{ .Release.Name }}.{{ .Environment.Name }}.wmflabs.org
+
+allowedRegistries:
+ - "docker-registry.tools.wmflabs.org"
+
+buildID: >
+  {{ exec "./utils/get_build_id.sh" (list) | indent 2 }}

@@ -13,6 +13,7 @@ type Config struct {
 	TLSKey     string   `default:"/etc/webhook/certs/key.pem"`
 	Registries []string `default:"['docker-registry.tools.wmflabs.org']"`
 	Debug      bool     `default:"true"`
+	BuildID    string   `default:"nobuildid"`
 }
 
 func main() {

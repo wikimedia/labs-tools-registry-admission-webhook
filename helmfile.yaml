@@ -1,0 +1,14 @@
+releases:
+  - name: registry-admission
+    namespace: registry-admission
+    createNamespace: true
+    chart: ./deploy
+    values:
+    - "./deploy/values-common.yaml.gotmpl"
+    - "./deploy/values-{{ .Environment.Name }}.yaml.gotmpl"
+    wait: true
+
+environments:
+  dev: {}
+  toolsbeta: {}
+  tools: {}

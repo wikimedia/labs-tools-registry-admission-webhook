@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "registry-admission-webhook.name" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "registry-admission-webhook.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+  - name: webhook
+    port: {{ .Values.service.port }}
+    targetPort: 8080
+    protocol: TCP
+  selector:
+    {{- include "registry-admission-webhook.selectorLabels" . | nindent 4 }}
