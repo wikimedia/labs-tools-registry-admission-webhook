@@ -32,10 +32,12 @@ or want to examine things more, use `go test -test.v ./...`
 
 You can deploy it using the `deploy.sh` script.
 For the dev environment rebuilding the container (minikube running locally):
-* `deploy.sh -b dev`
+* `deploy.sh -ib dev`
 
 If you don't want to rebuild the image, skip the flag:
-* `deploy.sh dev`
+* `deploy.sh -i dev`
+
+The `-i` flag will ask before changing anything (skip it for non-interactive deployment).
 
 Since this was designed for use in [Toolforge](https://wikitech.wikimedia.org/wiki/Portal:Toolforge "Toolforge Portal"), so the instructions here focus on that.
 
@@ -52,7 +54,7 @@ the Dockerfile won't work.
 Certificates created with the Kubernetes API are valid for one year. When upgrading Kubernetes (or whenever necessary)
 it is wise to rotate the certs for this service. To do so, you can do it at deploy time with (change `tools` with the env you are refreshing the certs for):
 
-* `./deploy.sh -c tools`
+* `./deploy.sh -ic tools`
 
 Or any time by simply running (as cluster admin or root@control host) `root@tools-k8s-control-1:# ./deploy/utils/get-cert.sh`. That will recreate the cert secret. Then delete the existing pods to ensure
 that the golang web services are serving the new cert.

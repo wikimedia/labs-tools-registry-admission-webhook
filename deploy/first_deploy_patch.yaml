@@ -1,0 +1,6 @@
+metadata:
+  annotations:
+    meta.helm.sh/release-name: registry-admission
+    meta.helm.sh/release-namespace: registry-admission
+  labels:
+    app.kubernetes.io/managed-by: Helm

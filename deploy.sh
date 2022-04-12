@@ -10,9 +10,14 @@ help() {
 
     Options:
       -h        Show this help.
-      -c        Force refresh the certificates (only for new installations or if they are expired).
+      -c        Force refresh the certificates (only for new installations or
+                if they are expired).
       -b        Also build the container (locally only).
       -v        Show verbose output.
+      -i        If set, it will request user input before doing any changes.
+      -f        If this is the first time deploying this to a running instance,
+                this will take care of updating the existing resources to be
+                able to deploy with helm
 
 EOH
 }
@@ -21,8 +26,10 @@ EOH
 main () {
     local do_build="no"
     local refresh_certs="no"
+    local interactive_flag=""
+    local first_deploy="no"
 
-    while getopts "hvcb" option; do
+    while getopts "hvcbif" option; do
         case "${option}" in
         h)
             help
@@ -31,6 +38,8 @@ main () {
         b) do_build="yes";;
         c) refresh_certs="yes";;
         v) set -x;;
+        i) interactive_flag="-i";;
+        f) first_deploy="yes";;
         *)
             echo "Wrong option $option"
             help
@@ -67,7 +76,27 @@ main () {
         ./deploy/utils/get-cert.sh
     fi
 
+    if [[ "$first_deploy" == "yes" ]]; then
+        kubectl patch \
+            ClusterRoleBinding registry-admission-psp \
+            --patch-file ./deploy/first_deploy_patch.yaml
+        kubectl patch \
+            --namespace registry-admission \
+            service registry-admission \
+            --patch-file ./deploy/first_deploy_patch.yaml
+        # prevent the misbehavior of the hook from deploying
+        kubectl delete \
+            ValidatingWebhookConfiguration registry-admission \
+        || true
+        # we need to recreate it as we are changing immutable fields (ex. selector)
+        kubectl delete \
+            --namespace registry-admission \
+            deployment registry-admission \
+        || true
+    fi
+
     helmfile \
+        $interactive_flag \
         --environment "$environment" \
         apply
 }
