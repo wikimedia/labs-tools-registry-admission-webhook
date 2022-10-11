@@ -1,31 +1,24 @@
 package main
 
 import (
+	"gerrit.wikimedia.org/labs/tools/registry-admission-webhook/config"
 	"gerrit.wikimedia.org/labs/tools/registry-admission-webhook/server"
-	"github.com/kelseyhightower/envconfig"
 	"github.com/sirupsen/logrus"
 )
 
 // Config is the general configuration of the webhook via env variables
-type Config struct {
-	ListenOn   string   `default:"0.0.0.0:8080"`
-	TLSCert    string   `default:"/etc/webhook/certs/cert.pem"`
-	TLSKey     string   `default:"/etc/webhook/certs/key.pem"`
-	Registries []string `default:"['docker-registry.tools.wmflabs.org']"`
-	Debug      bool     `default:"true"`
-	BuildID    string   `default:"nobuildid"`
-}
-
 func main() {
-	config := &Config{}
-	envconfig.Process("", config)
+	myConfig, err := config.GetConfigFromEnv()
+	if err != nil {
+		logrus.Error("Got malformed configuration from environment: ", err)
+	}
 
-	if config.Debug {
+	if myConfig.Debug {
 		logrus.SetLevel(logrus.DebugLevel)
 	}
 
-	logrus.Infoln(config)
-	nsac := server.RegistryAdmission{Registries: config.Registries}
-	s := server.GetAdmissionValidationServer(&nsac, config.TLSCert, config.TLSKey, config.ListenOn)
+	logrus.Infoln(myConfig)
+	nsac := server.RegistryAdmission{Registries: myConfig.Registries}
+	s := server.GetAdmissionValidationServer(&nsac, myConfig.TLSCert, myConfig.TLSKey, myConfig.ListenOn)
 	s.ListenAndServeTLS("", "")
 }

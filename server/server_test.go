@@ -9,6 +9,7 @@ import (
 	"strings"
 	"testing"
 
+	"gerrit.wikimedia.org/labs/tools/registry-admission-webhook/config"
 	"github.com/sirupsen/logrus"
 	admissionv1 "k8s.io/api/admission/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -409,6 +410,20 @@ func encodeRequest(review *admissionv1.AdmissionReview) []byte {
 
 func TestServeReturnsCorrectJson(t *testing.T) {
 	nsc := &RegistryAdmission{}
+	server := httptest.NewServer(GetAdmissionServerNoSSL(nsc, ":8080").Handler)
+	requestString := string(encodeRequest(&AdmissionRequestPassPod))
+	myr := strings.NewReader(requestString)
+	r, _ := http.Post(server.URL, "application/json", myr)
+	review := decodeResponse(r.Body)
+	t.Log(review.Response)
+	if review.Request.UID != AdmissionRequestPassPod.Request.UID {
+		t.Error("Request and response UID don't match")
+	}
+}
+
+func TestServeReturnsCorrectJsonWithDefaultConfig(t *testing.T) {
+	config, _ := config.GetConfigFromEnv()
+	nsc := &RegistryAdmission{Registries: config.Registries}
 	server := httptest.NewServer(GetAdmissionServerNoSSL(nsc, ":8080").Handler)
 	requestString := string(encodeRequest(&AdmissionRequestPassPod))
 	myr := strings.NewReader(requestString)
