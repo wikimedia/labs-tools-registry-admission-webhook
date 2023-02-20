@@ -1,0 +1,15 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: registry-admission-certs
+  labels:
+    name: registry-admission-certs
+spec:
+  dnsNames:
+    - "volume-admission.{{ .Release.Namespace }}.svc"
+  secretName: registry-admission-certs
+  revisionHistoryLimit: 1
+  issuerRef:
+    name: registry-admission-certs
+    kind: Issuer
+    group: cert-manager.io

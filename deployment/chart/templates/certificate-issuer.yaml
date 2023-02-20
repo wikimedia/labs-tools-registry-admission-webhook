@@ -1,0 +1,8 @@
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: registry-admission-certs
+  labels:
+    name: registry-admission-certs
+spec:
+  selfSigned: {}

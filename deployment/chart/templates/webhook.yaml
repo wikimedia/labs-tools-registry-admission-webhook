@@ -1,17 +1,19 @@
 apiVersion: admissionregistration.k8s.io/v1
 kind: ValidatingWebhookConfiguration
 metadata:
-  name: {{ include "registry-admission-webhook.name" . }}
+  name: registry-admission
   labels:
-    {{- include "registry-admission-webhook.labels" . | nindent 4 }}
+    name: registry-admission
+  annotations:
+    cert-manager.io/inject-ca-from: "{{ .Release.Namespace }}/registry-admission-certs"
 webhooks:
-  - name: {{ .Values.webhookName }}
+  - name: registry-admission.tools.wmcloud.org
     clientConfig:
       service:
-        name: {{ include "registry-admission-webhook.name" . }}
+        name: registry-admission
         namespace: {{ .Release.Namespace }}
         path: "/"
-      caBundle: {{ .Values.caBundle }}
+      caBundle: ""
     rules:
       - operations: ["CREATE","UPDATE"]
         apiGroups: [""]
@@ -21,7 +23,7 @@ webhooks:
         apiGroups: ["apps"]
         apiVersions: ["v1"]
         resources: ["deployments"]
-    failurePolicy: Ignore
+    failurePolicy: {{ .Values.webhook.failurePolicy }}
     admissionReviewVersions: ["v1"]
     sideEffects: None
     namespaceSelector:
@@ -31,5 +33,7 @@ webhooks:
           values:
             # don't cause issues with kubernetes internals
             - "kube-system"
+            # prevent chicken-and-egg problems with webhook certificates
+            - "cert-manager"
             # so that the controller itself can start
-            - "registry-admission"
+            - "{{ .Release.Namespace }}"

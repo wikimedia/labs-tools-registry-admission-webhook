@@ -1,0 +1,6 @@
+allowedRegistries:
+ - "docker-registry.tools.wmflabs.org"
+ - "harbor.toolsbeta.wmflabs.org"
+
+image:
+  tag: 07bc7db

@@ -1,115 +1,26 @@
 #!/bin/bash
-set -o errexit
-set -o nounset
-set -o pipefail
+# standard deploy.sh for applications using Helmfile
+set -eu
 
+# explicitly find and specify path to helmfile to allow invoking
+# this script without having to cd to the deployment directory
+BASE_DIR=$(dirname "$(realpath -s "$0")")
+cd "$BASE_DIR"
 
-help() {
-    cat <<EOH
-    Usage: $0 [OPTIONS] <ENVIRONMENT>
+DEPLOY_ENVIRONMENT=${1:-}
+PROJECT=$(cat /etc/wmcs-project 2>/dev/null || echo "local")
 
-    Options:
-      -h        Show this help.
-      -c        Force refresh the certificates (only for new installations or
-                if they are expired).
-      -b        Also build the container (locally only).
-      -v        Show verbose output.
-      -i        If set, it will request user input before doing any changes.
-      -f        If this is the first time deploying this to a running instance,
-                this will take care of updating the existing resources to be
-                able to deploy with helm
+if [ -z "$DEPLOY_ENVIRONMENT" ]; then
+	DEPLOY_ENVIRONMENT="$PROJECT"
+fi
 
-EOH
-}
+# use -i (interactive) to ask for confirmation for changing
+# live cluster state if stdin is a tty
+if [ -t 0 ]; then
+	INTERACTIVE_PARAM="-i"
+else
+	INTERACTIVE_PARAM=""
+fi
 
-
-main () {
-    local do_build="no"
-    local refresh_certs="no"
-    local interactive_flag=""
-    local first_deploy="no"
-
-    while getopts "hvcbif" option; do
-        case "${option}" in
-        h)
-            help
-            exit 0
-            ;;
-        b) do_build="yes";;
-        c) refresh_certs="yes";;
-        v) set -x;;
-        i) interactive_flag="-i";;
-        f) first_deploy="yes";;
-        *)
-            echo "Wrong option $option"
-            help
-            exit 1
-            ;;
-        esac
-    done
-    shift $((OPTIND-1))
-
-    # default to prod, avoid deploying dev in prod if there's any issue
-    local environment="tools"
-    if [[ "${1:-}" == "" ]]; then
-        if [[ -f /etc/wmcs-project ]]; then
-            environment="$(cat /etc/wmcs-project)"
-        fi
-    else
-        environment="${1:-}"
-    fi
-
-    if [[ ! -f "deploy/values-$environment.yaml.gotmpl"  ]]; then
-        echo "Unknown environment $environment, use one of:"
-        find deploy \
-            -iname 'values-*yaml.gotmpl' \
-            | grep -v 'common' \
-            | sed -e 's|deploy/values-\(.*\).yaml.gotmpl|\1|'
-        exit 1
-    fi
-
-    if [[ "$do_build" == "yes" ]]; then
-        if [[ "$environment" != "dev" ]]; then
-            echo "You probably don't want this, as it will build the image locally, hit enter if you are sure. (hit Ctrl+C to cancel)"
-            read -r
-        fi
-        # shellcheck disable=SC2046
-        eval $(minikube docker-env)
-        docker build . -t docker-registry.tools.wmflabs.org/registry-admission:latest
-    fi
-
-    if ! kubectl --namespace registry-admission get secret registry-admission-certs > /dev/null 2>&1; then
-        refresh_certs="yes"
-    fi
-    if [[ "$refresh_certs" == "yes" ]]; then
-        ./deploy/utils/get-cert.sh
-    fi
-
-    if [[ "$first_deploy" == "yes" ]]; then
-        kubectl patch \
-            ClusterRoleBinding registry-admission-psp \
-            --patch-file ./deploy/first_deploy_patch.yaml
-        kubectl patch \
-            --namespace registry-admission \
-            service registry-admission \
-            --patch-file ./deploy/first_deploy_patch.yaml
-        # prevent the misbehavior of the hook from deploying
-        kubectl delete \
-            ValidatingWebhookConfiguration registry-admission \
-        || true
-        # we need to recreate it as we are changing immutable fields (ex. selector)
-        kubectl delete \
-            --namespace registry-admission \
-            deployment registry-admission \
-        || true
-    fi
-
-    helmfile \
-        $interactive_flag \
-        --environment "$environment" \
-        apply
-}
-
-
-
-main "$@"
+# helmfile apply will show a diff before doing changes
+helmfile -e "$DEPLOY_ENVIRONMENT" --file "./deployment/helmfile.yaml" $INTERACTIVE_PARAM apply

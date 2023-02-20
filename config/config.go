@@ -8,11 +8,10 @@ import (
 
 type Config struct {
 	ListenOn   string   `default:"0.0.0.0:8080"`
-	TLSCert    string   `default:"/etc/webhook/certs/cert.pem"`
-	TLSKey     string   `default:"/etc/webhook/certs/key.pem"`
+	TLSCert    string   `default:"/etc/webhook/certs/tls.crt"`
+	TLSKey     string   `default:"/etc/webhook/certs/tls.key"`
 	Registries []string `default:"docker-registry.tools.wmflabs.org"`
 	Debug      bool     `default:"true"`
-	BuildID    string   `default:"nobuildid"`
 }
 
 func GetConfigFromEnv() (*Config, error) {

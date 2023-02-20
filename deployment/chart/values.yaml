@@ -7,17 +7,9 @@ replicaCount: 2
 image:
   repository: docker-registry.tools.wmflabs.org/registry-admission
   # The following is for testing only
+  # tag: latest
   # pullPolicy: Never
   pullPolicy: IfNotPresent
-  # Overrides the image tag whose default is the chart appVersion.
-  tag: "latest"
-
-securityContext:
-  readOnlyRootFilesystem: true
-
-service:
-  type: ClusterIP
-  port: 443
 
 resources:
   limits:
@@ -27,11 +19,7 @@ resources:
     memory: 50Mi
     cpu: 300m
 
+webhook:
+  failurePolicy: Fail
 
-webhookName: {{ .Release.Name }}.{{ .Environment.Name }}.wmflabs.org
-
-allowedRegistries:
- - "docker-registry.tools.wmflabs.org"
-
-buildID: >
-  {{ exec "./utils/get_build_id.sh" (list) | indent 2 }}
+allowedRegistries: []

@@ -64,15 +64,15 @@ func GetAdmissionServerNoSSL(ac AdmissionController, listenOn string) *http.Serv
 	return server
 }
 
-//GetAdmissionValidationServer is a constructor for producing a working TLS-enabled webhook
+// GetAdmissionValidationServer is a constructor for producing a working TLS-enabled webhook
 func GetAdmissionValidationServer(ac AdmissionController, tlsCert, tlsKey, listenOn string) *http.Server {
 	sCert, err := tls.LoadX509KeyPair(tlsCert, tlsKey)
+	if err != nil {
+		logrus.Fatalln(err)
+	}
 	server := GetAdmissionServerNoSSL(ac, listenOn)
 	server.TLSConfig = &tls.Config{
 		Certificates: []tls.Certificate{sCert},
-	}
-	if err != nil {
-		logrus.Error(err)
 	}
 	return server
 }
