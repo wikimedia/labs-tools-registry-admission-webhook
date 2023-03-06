@@ -6,7 +6,7 @@ metadata:
     name: registry-admission-certs
 spec:
   dnsNames:
-    - "volume-admission.{{ .Release.Namespace }}.svc"
+    - "registry-admission.{{ .Release.Namespace }}.svc"
   secretName: registry-admission-certs
   revisionHistoryLimit: 1
   issuerRef:
