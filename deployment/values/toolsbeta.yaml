@@ -3,4 +3,4 @@ allowedRegistries:
  - "harbor.toolsbeta.wmflabs.org"
 
 image:
-  tag: 07bc7db
+  tag: e916fee
