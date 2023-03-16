@@ -6,5 +6,5 @@ image:
 replicaCount: 1
 
 allowedRegistries:
- - "docker-registry.tools.wmflabs.org"
- - "harbor.toolsbeta.wmflabs.org"
+  - "docker-registry.tools.wmflabs.org"
+  - "toolsbeta-harbor.wmcloud.org"
