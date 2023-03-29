@@ -3,4 +3,4 @@ allowedRegistries:
   - "toolsbeta-harbor.wmcloud.org"
 
 image:
-  tag: e916fee
+  tag: 24115c7
