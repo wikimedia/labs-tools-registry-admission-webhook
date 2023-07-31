@@ -1,5 +1,0 @@
-*.o
-.vscode
-deploys/dev/webhook.yaml
-# the default binary created by go build
-/registry-admission-webhook
